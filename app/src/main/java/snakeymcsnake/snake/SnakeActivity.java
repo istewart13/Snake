@@ -1,0 +1,62 @@
+package snakeymcsnake.snake;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Point;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Display;
+
+public class SnakeActivity extends AppCompatActivity {
+
+
+    SnakeView mSnakeView;
+//
+//    Bitmap mSnakeHead;
+//    Bitmap mSnakeBody;
+//    Bitmap mFood;
+//
+//    int mSnakeDirection = 0; // 0 - right, 1 - down, 2 - left, 3 - up
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // get access to screen details
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+
+        // create view which adjusts to size of screen
+        mSnakeView = new SnakeView(this, size.x, size.y);
+        setContentView(mSnakeView);
+
+
+//        createDisplay();
+////        createSounds();
+//        mGameView = new GameView(this);
+//        setContentView(mGameView);
+    }
+
+    // runs when the player starts the game
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSnakeView.resume();
+    }
+
+    // runs when the player exits the game
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSnakeView.pause();
+    }
+
+}
+
+
+// TODO Load sound somewhere
+
+// TODO  pass in num blocks wide/high to snake
