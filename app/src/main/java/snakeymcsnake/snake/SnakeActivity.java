@@ -7,7 +7,6 @@ import android.view.Display;
 
 public class SnakeActivity extends AppCompatActivity {
 
-
     SnakeView mSnakeView;
 
     @Override

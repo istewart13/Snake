@@ -4,13 +4,14 @@ package snakeymcsnake.snake;
  * Created by user on 22/08/2016.
  */
 public class Snake {
-    private int [] mSnakeXPos;
-    private int [] mSnakeYPos;
+    private int[] mSnakeXPos;
+    private int[] mSnakeYPos;
     private int mSnakeLength;
     private boolean mAlive = true;
     private int mNumBlocksWide;
     private int mNumBlocksHigh;
     private int mDirection = 1; // right = 1, down = 2, left = 3, up = 4
+    private int mSpeed;
 
     public Snake(int numBlocksWide, int numBlocksHigh) {
         mNumBlocksWide = numBlocksWide;
@@ -18,6 +19,7 @@ public class Snake {
         mSnakeXPos = new int[200];
         mSnakeYPos = new int[200];
         mSnakeLength = 3;
+        mSpeed = 100;
         createInitialSnake();
     }
 
@@ -32,10 +34,6 @@ public class Snake {
         mSnakeYPos[0] = startYPos;
         mSnakeYPos[1] = startYPos;
         mSnakeYPos[2] = startYPos;
-    }
-
-    public void grow() {
-        mSnakeLength++;
     }
 
     public void moveBody() {
@@ -66,24 +64,16 @@ public class Snake {
         return mSnakeXPos;
     }
 
-    public int getHeadXPos() {
-        return mSnakeXPos[0];
-    }
-
     public int[] getYPos() {
         return mSnakeYPos;
-    }
-
-    public int getHeadYPos() {
-        return mSnakeYPos[0];
     }
 
     public int getLength() {
         return mSnakeLength;
     }
 
-    public boolean isAlive() {
-        return mAlive;
+    public void grow() {
+        mSnakeLength++;
     }
 
     public void checkForCollision() {
@@ -92,7 +82,6 @@ public class Snake {
         boolean topWallHit = mSnakeYPos[0] < 0;
         boolean bottomWallHit = mSnakeYPos[0] > mNumBlocksHigh;
         boolean snakeHitSelf = collideWithSelf();
-
 
         if (leftWallHit || rightWallHit || topWallHit || bottomWallHit || snakeHitSelf) {
             mAlive = false;
@@ -108,6 +97,10 @@ public class Snake {
         return false;
     }
 
+    public boolean isAlive() {
+        return mAlive;
+    }
+
     public void increaseDirection() {
         mDirection++;
         if (mDirection == 5) {
@@ -120,5 +113,20 @@ public class Snake {
         if (mDirection == 0) {
             mDirection = 4;
         }
+    }
+
+    public boolean checkIfAte(Edible food) {
+        if (mSnakeXPos[0] == food.getXPos() && mSnakeYPos[0] == food.getYPos()) {
+            grow();
+            if (mSnakeLength < 40) {
+                mSpeed -= 1;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public int getSpeed() {
+        return mSpeed;
     }
 }

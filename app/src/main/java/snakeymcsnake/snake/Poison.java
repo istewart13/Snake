@@ -3,18 +3,18 @@ package snakeymcsnake.snake;
 import java.util.Random;
 
 /**
- * Created by user on 23/08/2016.
+ * Created by user on 24/08/2016.
  */
-public class Apple implements Edible{
+public class Poison implements Edible{
     private int mXPos;
     private int mYPos;
     private int mPoints;
 
-    public Apple(int numBlocksWide, int numBlocksHigh) {
+    public Poison(int numBlocksWide, int numBlocksHigh) {
         Random randInt = new Random();
         mXPos = randInt.nextInt(numBlocksWide - 1) + 1;
         mYPos = randInt.nextInt(numBlocksHigh - 1) + 1;
-        mPoints = 1;
+        mPoints = -10;
     }
 
     public int getXPos() {

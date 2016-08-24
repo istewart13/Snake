@@ -1,7 +1,6 @@
 package snakeymcsnake.snake;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -16,68 +15,41 @@ import android.view.SurfaceView;
  */
 public class SnakeView extends SurfaceView implements Runnable {
 
-    private Context mContext;
+//    private Context mContext;
     private Thread mGameThread = null;
     private SurfaceHolder mOurHolder; // locks the surface before drawing graphics
     private volatile boolean mIsPlaying;
-    private boolean mPaused = true;
     private Paint mPaint;
     private Canvas mCanvas;
+    private int mScore;
 
-    // used to initialise other classes
-    private Snake mSnake;
-    private Apple mApple;
-    private Bitmap appleImage;
-
-    // used to control frame rate
-    private long mFps; // track frames per second
-    private long mTimeThisFrame; // used to calculate fps
+    // variables related to screen / display
     private long mLastFrameTime;
-
     private int mScreenHeight;
     private int mScreenWidth;
     private int mScoreDisplayArea;
-
     private int mBlockSize;
     private int mNumBlocksWide;
     private int mNumBlocksHigh;
 
-    // TODO sound variables go here:
-//
-    private int mScore;
-//
-//    private int mNumCellsHigh;
-//    private int mNumCellsWide;
-//    private int mCellSize;
+    // used to initialise other classes
+    private Snake mSnake;
+    private Apple mApple;
+    private Banana mBanana;
+    private Poison mPoison;
 
     public SnakeView(Context context, int screenWidth, int screenHeight) {
         super(context);
-        this.mContext = context;
+//        this.mContext = context;
         mOurHolder = getHolder();
         mPaint = new Paint();
-
         createDisplay(screenWidth, screenHeight);
-
-
-//        TODO sound code goes here
         setupGameObjects();
-//
-//        mSnakeXPos = new int[100];
-//        mSnakeYPos = new int[100];
-//
-//        getSnake(mNumCellsHigh, mNumCellsWide);
-//        getApple(mNumCellsHigh, mNumCellsWide);
     }
 
     @Override
-    public void run() {
+    public void run() { // game loop
         while (mIsPlaying) {
-
-//                if (!mPaused) {
-            //todo add pause back in
-            // update the frame if the games's running
-
-//                }
             update();
             draw();
             controlFramesPerSecond();
@@ -85,17 +57,28 @@ public class SnakeView extends SurfaceView implements Runnable {
     }
 
     private void update() {
-        checkIfAte();
+        checkIfSnakeHasAte();
         mSnake.moveBody();
         mSnake.moveHead();
         mSnake.checkForCollision();
-        if (!mSnake.isAlive()) {
+        if (!mSnake.isAlive()) { // reset if game over
             mScore = 0;
             setupGameObjects();
-            // TODO GAME OVER
         }
     }
 
+    private void checkIfSnakeHasAte() {
+        if (mSnake.checkIfAte(mApple)) {
+            mScore += mApple.getPoints();
+            mApple = new Apple(mNumBlocksWide, mNumBlocksHigh);
+        } else if (mSnake.checkIfAte(mBanana)) {
+            mScore += mBanana.getPoints();
+            mBanana = new Banana(mNumBlocksWide, mNumBlocksHigh);
+        } else if (mSnake.checkIfAte(mPoison)) {
+            mScore += mPoison.getPoints();
+            mPoison = new Poison(mNumBlocksWide, mNumBlocksHigh);
+        }
+    }
 
     private void draw() {
         if (mOurHolder.getSurface().isValid()) {
@@ -107,17 +90,20 @@ public class SnakeView extends SurfaceView implements Runnable {
             // draw background colour
             mCanvas.drawColor(Color.argb(255, 77, 189, 51));
 
-            drawWalls();
-
+            // draw food / poison
             drawApple();
+            drawBanana();
+            drawPoison();
 
             // change brush colour to white
             mPaint.setColor(Color.argb(255, 255, 255, 255));
 
+            // draw snake
             drawSnake();
 
+            // draw score / length
             mPaint.setTextSize(60);
-            mCanvas.drawText("Score: " + mScore, 10, 70, mPaint);
+            mCanvas.drawText("Score: " + mScore + " Length: " + mSnake.getLength(), 10, 70, mPaint);
 
             // draw everything to screen
             mOurHolder.unlockCanvasAndPost(mCanvas);
@@ -127,12 +113,11 @@ public class SnakeView extends SurfaceView implements Runnable {
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
         switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
-
             case MotionEvent.ACTION_UP:
                 if (motionEvent.getX() > mScreenWidth / 2) {
-                    mSnake.increaseDirection();
+                    mSnake.increaseDirection(); // click on right side of screen
                 } else {
-                    mSnake.decreaseDirection();
+                    mSnake.decreaseDirection(); // click on left side of screen
                 }
         }
         return true;
@@ -157,11 +142,8 @@ public class SnakeView extends SurfaceView implements Runnable {
 
     private void controlFramesPerSecond() {
         long timeThisFrame = System.currentTimeMillis() - mLastFrameTime;
-        long sleepTime = 100 - timeThisFrame;
+        long sleepTime = mSnake.getSpeed() - timeThisFrame;
 
-        if (timeThisFrame > 0) {
-            mFps = (int) (1000 / timeThisFrame);
-        }
         if (sleepTime > 0) {
             try {
                 mGameThread.sleep(sleepTime);
@@ -178,13 +160,6 @@ public class SnakeView extends SurfaceView implements Runnable {
         mBlockSize = mScreenWidth / 50;
         mNumBlocksWide = 50;
         mNumBlocksHigh = (mScreenHeight - (mScoreDisplayArea * 2)) / mBlockSize;
-
-    }
-
-    private void drawWalls() {
-//        mPaint.setStrokeWidth(5);
-//        mPaint.setColor(Color.argb(255, 139, 69, 19));
-
     }
 
     private void drawSnake() {
@@ -193,39 +168,43 @@ public class SnakeView extends SurfaceView implements Runnable {
         int snakeLength = mSnake.getLength();
 
         for (int i = 0; i < snakeLength; i++) {
-            mCanvas.drawRect((snakeXPos[i] * mBlockSize),
-                    (snakeYPos[i] * mBlockSize + mScoreDisplayArea),
-                    (snakeXPos[i] * mBlockSize + mBlockSize),
-                    (snakeYPos[i] * mBlockSize + mScoreDisplayArea + mBlockSize),
-                    mPaint);
+            drawBlock(snakeXPos[i], snakeYPos[i]);
         }
     }
 
     private void drawApple() {
-        int appleXPos = mApple.getXPos();
-        int appleYPos = mApple.getYPos();
-
+        int XPos = mApple.getXPos();
+        int YPos = mApple.getYPos();
         mPaint.setColor(Color.argb(255, 255, 0, 0));
-        mCanvas.drawRect((appleXPos * mBlockSize),
-                (appleYPos * mBlockSize + mScoreDisplayArea),
-                (appleXPos * mBlockSize + mBlockSize),
-                (appleYPos * mBlockSize + mScoreDisplayArea + mBlockSize),
-                mPaint);;
+        drawBlock(XPos, YPos);
+    }
+
+    private void drawBanana() {
+        int XPos = mBanana.getXPos();
+        int YPos = mBanana.getYPos();
+        mPaint.setColor(Color.argb(255, 255, 225, 53));
+        drawBlock(XPos, YPos);
+    }
+
+    private void drawPoison() {
+        int XPos = mPoison.getXPos();
+        int YPos = mPoison.getYPos();
+        mPaint.setColor(Color.argb(255, 0, 0, 0));
+        drawBlock(XPos, YPos);
+    }
+
+    private void drawBlock(int XPos, int YPos) {
+        mCanvas.drawRect((XPos * mBlockSize),
+                (YPos * mBlockSize + mScoreDisplayArea),
+                (XPos * mBlockSize + mBlockSize),
+                (YPos * mBlockSize + mScoreDisplayArea + mBlockSize),
+                mPaint);
     }
 
     private void setupGameObjects() {
-        // TODO Initialise the game objects here
         mSnake = new Snake(mNumBlocksWide, mNumBlocksHigh);
         mApple = new Apple(mNumBlocksWide, mNumBlocksHigh);
+        mBanana = new Banana(mNumBlocksWide, mNumBlocksHigh);
+        mPoison = new Poison(mNumBlocksWide, mNumBlocksHigh);
     }
-
-    private void checkIfAte() {
-        if (mSnake.getHeadXPos() == mApple.getXPos() && mSnake.getHeadYPos() == mApple.getYPos()) {
-            mSnake.grow();
-            mApple = new Apple(mNumBlocksWide, mNumBlocksHigh);
-            mScore++;
-        }
-    }
-
-
 }
