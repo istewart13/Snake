@@ -24,3 +24,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(i);
     }
 }
+
+// TODO High score
+// TODO add more food
+// TODO add poison
+// TODO difficulty settings/speed
+// TODO tests
