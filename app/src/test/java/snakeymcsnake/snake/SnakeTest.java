@@ -98,4 +98,28 @@ public class SnakeTest {
         snake.moveHead();
         assertEquals(snake.getYPos()[0], 19);
     }
+
+    @Test
+    public void snakeHasInitialSpeed()
+    {
+        assertEquals(snake.getSpeed(), 100);
+    }
+
+    @Test
+    public void appleIsWorth1Point()
+    {
+        assertEquals(apple.getPoints(), 1);
+    }
+
+    @Test
+    public void bananaIsWorth5Points()
+    {
+        assertEquals(banana.getPoints(), 5);
+    }
+
+    @Test
+    public void poisonIsWorthMinus10Points()
+    {
+        assertEquals(poison.getPoints(), -10);
+    }
 }
